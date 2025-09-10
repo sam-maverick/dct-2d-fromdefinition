@@ -1,10 +1,10 @@
-This Node module is an implementation of the two-dimensional Discrete Fourier Transform (2D-DFT), and its inverse, from its very definition. The equations below show the definition of the 2D-DFT and the conventions supported in this module.
+This Node module is an implementation of the two-dimensional Discrete Cosine Transform (2D-DCT), and its inverse, from its very definition. The equations below show the definition of the 2D-DCT and the conventions supported in this module.
 
-<img src="./Transform_equations.svg" alt="correctness" style="zoom:150%;" />
+<img src="./Transform_equations_2D_DCT.svg" alt="correctness" style="zoom:100%;" />
 
 # Installation
 
-`npm install dft-2d-fromdefinition`
+`npm install dct-2d-fromdefinition`
 
 
 
@@ -13,10 +13,10 @@ This Node module is an implementation of the two-dimensional Discrete Fourier Tr
 ##### Forward transform
 
 ```
-const dft2ddef = require('dft-2d-fromdefinition');
+const dct2ddef = require('dct-2d-fromdefinition');
 
 let signal = [[[1,1],[2,0]],[[4,4],[5,0]]];  // corresponds to the complex signal [[1+j,2],[4+4j,5]]
-let transform = dft2ddef.dft(signal, 'unnormalized');
+let transform = dct2ddef.dct(signal, 'orthogonal_unitary');
 console.log(transform);
 // Gives approx. [[[12,5],[-2,5]],[[-6,-3],[0,-3]]]
 ```
@@ -24,10 +24,10 @@ console.log(transform);
 ##### Inverse transform
 
 ```
-const dft2ddef = require('dft-2d-fromdefinition');
+const dct2ddef = require('dct-2d-fromdefinition');
 
 let transform = [[[12,5],[-2,5]],[[-6,-3],[0,-3]]];
-let signal = dft2ddef.idft(transform, 'unnormalized');
+let signal = dct2ddef.idct(transform, 'orthogonal_unitary');
 console.log(signal);
 // Gives approx. [[[1,1],[2,0]],[[4,4],[5,0]]]  // corresponds to the complex signal [[1+j,2],[4+4j,5]]
 ```
