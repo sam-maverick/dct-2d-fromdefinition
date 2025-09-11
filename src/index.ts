@@ -1,24 +1,26 @@
-'use strict';
-
 import { add, multiply } from './utils';
+import * as guards from './index.guard'
 
-type Convention = 'orthogonal_unitary' | 'unnormalized_forward' | 'symmetric';
+// Type must be exported for the --export-all option of ts-export-guard in the build script of package.json
+export type Convention = 'orthogonal_unitary' | 'unnormalized_forward';
 
-function C (u: number, v: number, M: number, N: number, convention: Convention) {
-  switch(convention) {  // No break's needed because we always return or throw exception
-    case 'orthogonal_unitary':
-      if (u===0 && v===0) {
-        return Math.sqrt(1/(M*N));
-      } else if ((u===0 && v>0) || (u>0 && v===0)) {
-        return Math.sqrt(2/(M*N));
-      } else {
-        return Math.sqrt(4/(M*N));
-      }
-    case 'symmetric':
-      return Math.sqrt(4/(M*N));
-    case 'unnormalized_forward':
-      throw new Error('Unexpected error: There is no normalization factor in the \'unnormalized_forward\' convention');
-  };
+function C (a: number, D: number, convention: Convention) {
+      switch(convention) {
+        case 'orthogonal_unitary':
+          if (a===0) {
+            return Math.sqrt(1/D);
+          } else {
+            return Math.sqrt(2/D);
+          }
+        case 'unnormalized_forward':
+          if (a===0) {
+            return 1/2;
+          } else {
+            return 1;
+          }
+        default:
+          return 0;
+      };
 }
 
 
@@ -30,6 +32,7 @@ function C (u: number, v: number, M: number, N: number, convention: Convention) 
  * @returns The DCT of signal, in the same format.
  */
 export function dct (signal: number[][][], convention: Convention) {
+  if ( ! guards.isConvention(convention))  { throw new Error('Invalid convention.'); }
 
   const M = signal.length;
   const N = signal[0].length;
@@ -47,13 +50,9 @@ export function dct (signal: number[][][], convention: Convention) {
 
       switch(convention) {
         case 'orthogonal_unitary':
-          norm_factor_outer = C(u, v, M, N, convention);
+          norm_factor_outer = C(u, M, convention) * C(v, N, convention);
           break;
         case 'unnormalized_forward':
-          norm_factor_outer = 1;
-          break;
-        case 'symmetric':
-          norm_factor_outer = (Math.sqrt(4/(M*N)));
           break;
       };
 
@@ -81,6 +80,7 @@ export function dct (signal: number[][][], convention: Convention) {
  * @returns The inverse DCT, in the same format.
  */
 export function idct (transform: number[][][], convention: Convention) {
+  if ( ! guards.isConvention(convention))  { throw new Error('Invalid convention.'); }
 
   const M = transform.length;
   const N = transform[0].length;
@@ -94,29 +94,36 @@ export function idct (transform: number[][][], convention: Convention) {
     });
   });
 
-  for (let u=0; u<M; u++) {
-    for (let v=0; v<N; v++) {
+  switch(convention) {
+    case 'orthogonal_unitary':
+      break;
+    case 'unnormalized_forward':
+      norm_factor_outer = ((2/M)*(2/N));
+      break;
+  };
 
-      switch(convention) {
-        case 'orthogonal_unitary':
-          norm_factor_inner = C(u, v, M, N, convention);
-          break;
-        case 'unnormalized_forward':
-          norm_factor_outer = 4/(M*N);
-          norm_factor_inner = C(u, v, M, N, convention);
-          break;
-        case 'symmetric':
-          norm_factor_outer = (Math.sqrt(4/(M*N)));
-          break;
-      };
+  for (let x=0; x<M; x++) {
+    for (let y=0; y<N; y++) {
 
       let sum = [0,0];
-      for (let x=0; x<M; x++) {
-        for (let y=0; y<N; y++) {
-          sum = add ( sum, multiply ( transform[x][y], [norm_factor_inner * Math.cos(u*Math.PI*(x+0.5)/M) * Math.cos(v*Math.PI*(y+0.5)/N), 0] ) ) ;
+      for (let u=0; u<M; u++) {
+        for (let v=0; v<N; v++) {
+
+          switch(convention) {
+            case 'orthogonal_unitary':
+              norm_factor_inner = C(u, M, convention) * C(v, N, convention);
+              break;
+            case 'unnormalized_forward':
+              norm_factor_inner = C(u, M, convention) * C(v, N, convention);
+              break;
+          };
+
+          sum = add ( sum, multiply ( transform[u][v], [norm_factor_inner * Math.cos(u*Math.PI*(x+0.5)/M) * Math.cos(v*Math.PI*(y+0.5)/N), 0] ) ) ;
+
         }
       }
-      signal[u][v] = multiply([norm_factor_outer,0], sum);
+
+      signal[x][y] = multiply([norm_factor_outer,0], sum);
 
     }
   }

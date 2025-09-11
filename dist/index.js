@@ -1,24 +1,27 @@
-'use strict';
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.dct = dct;
 exports.idct = idct;
 const utils_1 = require("./utils");
-function C(u, v, M, N, convention) {
-    switch (convention) { // No break's needed because we always return or throw exception
+const guards = require("./index.guard");
+function C(a, D, convention) {
+    switch (convention) {
         case 'orthogonal_unitary':
-            if (u === 0 && v === 0) {
-                return Math.sqrt(1 / (M * N));
-            }
-            else if ((u === 0 && v > 0) || (u > 0 && v === 0)) {
-                return Math.sqrt(2 / (M * N));
+            if (a === 0) {
+                return Math.sqrt(1 / D);
             }
             else {
-                return Math.sqrt(4 / (M * N));
+                return Math.sqrt(2 / D);
             }
-        case 'symmetric':
-            return Math.sqrt(4 / (M * N));
         case 'unnormalized_forward':
-            throw new Error('Unexpected error: There is no normalization factor in the \'unnormalized_forward\' convention');
+            if (a === 0) {
+                return 1 / 2;
+            }
+            else {
+                return 1;
+            }
+        default:
+            return 0;
     }
     ;
 }
@@ -30,6 +33,9 @@ function C(u, v, M, N, convention) {
  * @returns The DCT of signal, in the same format.
  */
 function dct(signal, convention) {
+    if (!guards.isConvention(convention)) {
+        throw new Error('Invalid convention.');
+    }
     const M = signal.length;
     const N = signal[0].length;
     let norm_factor_outer = 1;
@@ -42,13 +48,9 @@ function dct(signal, convention) {
         for (let v = 0; v < N; v++) {
             switch (convention) {
                 case 'orthogonal_unitary':
-                    norm_factor_outer = C(u, v, M, N, convention);
+                    norm_factor_outer = C(u, M, convention) * C(v, N, convention);
                     break;
                 case 'unnormalized_forward':
-                    norm_factor_outer = 1;
-                    break;
-                case 'symmetric':
-                    norm_factor_outer = (Math.sqrt(4 / (M * N)));
                     break;
             }
             ;
@@ -71,6 +73,9 @@ function dct(signal, convention) {
  * @returns The inverse DCT, in the same format.
  */
 function idct(transform, convention) {
+    if (!guards.isConvention(convention)) {
+        throw new Error('Invalid convention.');
+    }
     const M = transform.length;
     const N = transform[0].length;
     let norm_factor_outer = 1;
@@ -80,28 +85,32 @@ function idct(transform, convention) {
             return [0, 0];
         });
     });
-    for (let u = 0; u < M; u++) {
-        for (let v = 0; v < N; v++) {
-            switch (convention) {
-                case 'orthogonal_unitary':
-                    norm_factor_inner = C(u, v, M, N, convention);
-                    break;
-                case 'unnormalized_forward':
-                    norm_factor_outer = 4 / (M * N);
-                    norm_factor_inner = C(u, v, M, N, convention);
-                    break;
-                case 'symmetric':
-                    norm_factor_outer = (Math.sqrt(4 / (M * N)));
-                    break;
-            }
-            ;
+    switch (convention) {
+        case 'orthogonal_unitary':
+            break;
+        case 'unnormalized_forward':
+            norm_factor_outer = ((2 / M) * (2 / N));
+            break;
+    }
+    ;
+    for (let x = 0; x < M; x++) {
+        for (let y = 0; y < N; y++) {
             let sum = [0, 0];
-            for (let x = 0; x < M; x++) {
-                for (let y = 0; y < N; y++) {
-                    sum = (0, utils_1.add)(sum, (0, utils_1.multiply)(transform[x][y], [norm_factor_inner * Math.cos(u * Math.PI * (x + 0.5) / M) * Math.cos(v * Math.PI * (y + 0.5) / N), 0]));
+            for (let u = 0; u < M; u++) {
+                for (let v = 0; v < N; v++) {
+                    switch (convention) {
+                        case 'orthogonal_unitary':
+                            norm_factor_inner = C(u, M, convention) * C(v, N, convention);
+                            break;
+                        case 'unnormalized_forward':
+                            norm_factor_inner = C(u, M, convention) * C(v, N, convention);
+                            break;
+                    }
+                    ;
+                    sum = (0, utils_1.add)(sum, (0, utils_1.multiply)(transform[u][v], [norm_factor_inner * Math.cos(u * Math.PI * (x + 0.5) / M) * Math.cos(v * Math.PI * (y + 0.5) / N), 0]));
                 }
             }
-            signal[u][v] = (0, utils_1.multiply)([norm_factor_outer, 0], sum);
+            signal[x][y] = (0, utils_1.multiply)([norm_factor_outer, 0], sum);
         }
     }
     return signal;
