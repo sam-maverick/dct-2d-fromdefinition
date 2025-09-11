@@ -1,4 +1,6 @@
-This Node module is an implementation of the two-dimensional Discrete Cosine Transform (2D-DCT), and its inverse, from its very definition. The equations below show the definition of the 2D-DCT and the conventions supported in this module.
+This Node module is an implementation of the two-dimensional Discrete Cosine Transform (2D-DCT), and its inverse, from its very definition. It is intended for educational and research purposes. You should use this module with small inputs only, since calculating the transform from the definition is inefficient.
+
+The equations below show the definition of the 2D-DCT and the conventions supported in this module.
 
 <img src="./Transform_equations_2D_DCT.svg" alt="correctness" style="zoom:100%;" />
 
