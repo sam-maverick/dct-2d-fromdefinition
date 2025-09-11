@@ -10,6 +10,8 @@ This Node module is an implementation of the two-dimensional Discrete Cosine Tra
 
 # Usage
 
+Note that the inputs and outputs are matrices of complex values, so as to support complex signals. If your signal is real, just convert it to complex first.
+
 ##### Forward transform
 
 ```

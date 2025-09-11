@@ -116,7 +116,7 @@ export function idct (transform: number[][][], convention: Convention) {
           sum = add ( sum, multiply ( transform[x][y], [norm_factor_inner * Math.cos(u*Math.PI*(x+0.5)/M) * Math.cos(v*Math.PI*(y+0.5)/N), 0] ) ) ;
         }
       }
-      transform[u][v] = multiply([norm_factor_outer,0], sum);
+      signal[u][v] = multiply([norm_factor_outer,0], sum);
 
     }
   }
