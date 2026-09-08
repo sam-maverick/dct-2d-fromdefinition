@@ -1,5 +1,7 @@
 upstream_push.sh
 
+.claude/
+
 # Logs
 logs
 *.log
